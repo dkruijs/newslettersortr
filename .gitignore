@@ -5,6 +5,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Google API credentials
+# credentials.json
+
 # Distribution / packaging
 .Python
 env/
