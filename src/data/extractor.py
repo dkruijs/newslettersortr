@@ -4,16 +4,19 @@ from email.parser import BytesParser
 from base64 import b64decode
 from src.data.get_gmails import main as get_mails
 
+
 def extract(mail_delta):
     extractor = BytesParser()
     for key, bytestr_msg in mail_delta:
         bit_msg = b64decode(bytestr_msg)
-        msg = extractor.parsebytes(headersonly=False)
+        msg = extractor.parsebytes(bit_msg, headersonly=False)
         print(msg)
+
 
 def main():
     messages = get_mails()
     tmp = extract(messages)
+
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
