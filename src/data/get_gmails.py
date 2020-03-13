@@ -61,7 +61,7 @@ def main():
             print(msg['internalDate'])
             print(msg['payload']['headers'])
             print(msg['snippet'])
-            print(msg['payload']['body']['data'])
+            print(msg['payload']['body'])
 
 
 # @click.command()
