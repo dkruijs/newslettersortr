@@ -1,20 +1,17 @@
 import logging
+import base64
 from pathlib import Path
-from email.parser import BytesParser
-from base64 import b64decode
-from src.data.get_gmails import main as get_mails
+from src.data.get_gmails import get_mail
 
 
 def extract(mail_delta):
-    extractor = BytesParser()
-    for key, bytestr_msg in mail_delta:
-        bit_msg = b64decode(bytestr_msg)
-        msg = extractor.parsebytes(bit_msg, headersonly=False)
-        print(msg)
+    for id, content in mail_delta.items():
+        msg_str = base64.urlsafe_b64decode(content['raw'].encode('UTF8'))
+        print(msg_str)
 
 
 def main():
-    messages = get_mails()
+    messages = get_mail()
     tmp = extract(messages)
 
 

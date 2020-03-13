@@ -3,7 +3,6 @@ import click
 import logging
 from pathlib import Path
 # from dotenv import find_dotenv, load_dotenv
-
 import pickle
 import os.path
 from googleapiclient.discovery import build
@@ -19,7 +18,7 @@ from google.auth.transport.requests import Request
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-def main():
+def get_mail():
     """Shows basic usage of the Gmail API.
     Lists the user's Gmail labels.
     """
@@ -50,18 +49,16 @@ def main():
     results = service.users().messages().list(userId='me',labelIds = ['INBOX']).execute()
     messages = results.get('messages', [])
 
+    message_store = {}
 
     if not messages:
         print('No messages found.')
     else:
-        print("Message snippets:")
+        print("Message retrieved")
         for message in messages:
-            msg = service.users().messages().get(userId='me', id=message['id']).execute()
-            print(msg['id'])
-            print(msg['internalDate'])
-            print(msg['payload']['headers'])
-            print(msg['snippet'])
-            print(msg['payload']['body'])
+            message = service.users().messages().get(userId='me', id=message['id'], format='raw').execute()
+            message_store[message['id']] = message
+    return(message_store)
 
 
 # @click.command()
@@ -74,7 +71,8 @@ def main():
 #     logger = logging.getLogger(__name__)
 #     logger.info('making final data set from raw data')
 
-
+def main():
+    messages = get_mail()
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
