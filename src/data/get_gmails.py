@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import click
 import logging
+import json
 from pathlib import Path
 # from dotenv import find_dotenv, load_dotenv
 
@@ -17,9 +18,9 @@ from google.auth.transport.requests import Request
 
 
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
-def main():
+def main(output_filepath):
     """Shows basic usage of the Gmail API.
     Lists the user's Gmail labels.
     """
@@ -61,7 +62,16 @@ def main():
             print(msg['internalDate'])
             print(msg['payload']['headers'])
             print(msg['snippet'])
-            print(msg['payload']['body'])
+            try:
+                print(msg['payload']['body']['data'])
+            except KeyError:
+                print("no message body data found")
+
+            # save to disk
+            # json_object = json.loads(msg)
+            # TODO: msg['payload']['headers'][ITEREER if name=Received]['value'] om de afzender op te nemen in filename
+            with open(os.path.join(output_filepath, "_".join([msg['internalDate'], msg['id']])), "w") as file:
+                json.dump(msg, file)            
 
 
 # @click.command()
@@ -87,4 +97,4 @@ if __name__ == '__main__':
     # load up the .env entries as environment variables
     # load_dotenv(find_dotenv())
 
-    main()
+    main(os.path.join(project_dir, "data", "raw"))
