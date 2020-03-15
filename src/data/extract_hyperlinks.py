@@ -3,7 +3,7 @@ import logging
 import base64
 import re
 from pathlib import Path
-from src.data.get_gmails import get_mail
+from src.data.get_gmails import connector_gmail
 
 # see https://stackoverflow.com/questions/39373243/what-is-the-encoding-of-the-body-of-gmail-message-how-to-decode-it
 # TODO: Make sure solution haldes mime and non-mime
@@ -28,7 +28,7 @@ class InboxDelta:
         Then parses the e-mail line endings from the file and stores the resulting string in a dict with structure
         {msg_id: parsed string}.
 
-        :return: A dict of email message strings with structure {msg_id: parsed string}.
+        :return extract_store: A dict of email message strings with structure {msg_id: parsed string}.
         """
         extract_store = {}
         for msg_id, content in raw_msgs.items():
@@ -56,8 +56,14 @@ class InboxDelta:
 
     def parse(self, string_msg_dict):
         """
-        :param string_msg_dict:
-        :return: msg_hyperlink_store
+        :param string_msg_dict: A dictionary of string e-mail messages, with structure {gmail_msg_id:
+        content_string}
+
+        Takes a dictionary of extracted e-mail messages that have been processed to strings, parses out a link starting
+         with 'https://', cleans the link according to a number of selection rules, and returns a list of hyperlinks.
+
+        :return msg_hyperlink_store: A list of hyperlinks extrated from e-mail messages, not including mails from
+        google or subscription related mails.
         """
         parsed_list = []
         msg_hyperlink_store = []
@@ -73,16 +79,15 @@ class InboxDelta:
         for link in parsed_list:
             if (link not in checklist) and \
                 ('accounts.google.com' not in link) and \
-                ('subscr' not in link):
+                ('subscr' not in link) and \
+                ('aiohttp' not in link): # TODO: Into config for rules related to the various newsletter cofigurations
                 msg_hyperlink_store.append(link)
                 checklist.append(link)
         return msg_hyperlink_store
 
 
 def main():
-    messages = InboxDelta(get_mail())
-    print(messages.hyperlinks)
-
+    pass
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
