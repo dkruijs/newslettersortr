@@ -3,13 +3,17 @@ newslettersortr
 
 An ML solution for filtering and parsing AI-related newsletters.
 
-/src
-    /data
-## get_gmails.py
+/src/data
+### get_gmails.py
 A module for retrieving all unread e-mails from a configured GMail account, marking them as unread and persisting them to storage (in /data/raw or a GCP bucket) as JSON-textfiles.
 Based on examples from: 
 * <https://developers.google.com/gmail/api/quickstart/python>
 * <https://codehandbook.org/how-to-read-email-from-gmail-api-using-python/>
+
+### extract_hyperlinks.py
+
+### retrieve_text_from_link.py
+
 
 Project Organization
 ------------

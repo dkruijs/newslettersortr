@@ -12,13 +12,17 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient import errors
 
+from google.cloud import storage
+# from oauth2client.service_account import ServiceAccountCredentials
 
+# TODO: parameterize using ENV?  
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 TOKEN_FILE = '../../token.pickle'
 CREDENTIALS_FILE = '../../credentials.json'
+STORAGE_BUCKET = 'newslettersortr'
 
-class GMailGetter:
+class GMailGetter:  
     def __init__(self, credentials=None):
         self.service = self.initialize_login(credentials)
 
@@ -77,18 +81,6 @@ class GMailGetter:
             print('No unread threads found.')
             return None
         else:
-            # print("Message snippets:")
-            # for message in messages:
-            #     msg = service.users().messages().get(userId='me', id=message['id']).execute()
-            #     print(msg['id'])
-            #     print(msg['internalDate'])
-            #     print(msg['payload']['headers'])
-            #     print(msg['snippet'])
-            #     try:
-            #         print(msg['payload']['body']['data'])
-            #     except KeyError:
-            #         print("no message body data found")
-
             return messages
 
     def mark_as_read(self, messages):
@@ -122,8 +114,8 @@ class GMailGetter:
 
         return processed_messages
 
-
-    def persist_to_storage(self, messages, local_path='../../data/raw', **gcp_metadata):
+    def persist_to_storage(self, messages, local_path='../../data/raw', 
+                            credentials_file=None, bucket_name=None, bucket_path=None):
         """
         Persists a collection of messages to storage as JSON text files, optionally to GCP 
         object storage or to a local path. 
@@ -137,23 +129,48 @@ class GMailGetter:
             file_names: a list of processed filenames or GCP object names.
         """
         service = self.service
-        if not gcp_metadata:
-            # we save to local storage
+
+        if credentials_file == bucket_name == bucket_path == None:
+            print(f"Persisting to local storage at: {local_path}")
             file_names = []
             for message in messages:
                 # TODO: msg['payload']['headers'][ITEREER if name=Received]['value'] om de afzender op te nemen in filename
                 msg = service.users().messages().get(userId='me', id=message['id']).execute()
-                with open(os.path.join(local_path, "_".join([msg['internalDate'], msg['id']])) + '.json', "w") as file:
+                out_file = os.path.join(local_path, "_".join([msg['internalDate'], msg['id']])) + '.json'
+                with open(out_file, "w") as file:
                     json.dump(msg, file)
                     file_names.append(file.name)
-
             return file_names
+
         else:
-            # we save to GCP storage
-            pass
+            print(f"Persisting to GCP Storage at {bucket_name}/{bucket_path}")
+
+            # Explicitly use service account credentials by specifying the private key
+            # file.
+            storage_client = storage.Client.from_service_account_json(
+                credentials_file) 
+
+            # print('buckets:', list(storage_client.list_buckets()))
+
+            bucket = storage_client.get_bucket(bucket_name) 
+
+            for message in messages:
+                msg = service.users().messages().get(userId='me', id=message['id']).execute()
+                out_file = os.path.join(bucket_path, "_".join([msg['internalDate'], msg['id']])) + '.json'
+                blob = bucket.blob(out_file)
+                print('blob:', blob)
+                # blob.upload_from_filename(path_to_file)
+                blob.upload_from_string(str(msg))
+
+            #returns a public url
+            return blob.public_url
         
 
 def main():
+    """
+    Main function mainly demonstrates the 'normal flow', can be called to simply
+    retrieve new data.
+    """
     # We instantiate a GMailGetter without credentials, instead using 
     # the manual authentication and credentials caching logic.
     mail_getter = GMailGetter()
@@ -162,8 +179,13 @@ def main():
     print('Found unread messages:', unread_messages, '\n')
 
     if unread_messages is not None:
-        saved_to_disk = mail_getter.persist_to_storage(unread_messages)
-        print('Saved to disk:', saved_to_disk, '\n')
+        gcp_metadata = {
+            'credentials_file': '../../NewsletterSortr-c019f9f5094d.json',
+            'bucket_name': 'newslettersortr',
+            'bucket_path': 'data/raw/'
+        }
+        saved_to_disk = mail_getter.persist_to_storage(unread_messages, **gcp_metadata)
+        print('Persisted to storage:', saved_to_disk, '\n')
 
         marked_as_read = mail_getter.mark_as_read(unread_messages)
         print('Marked as read:', marked_as_read, '\n')
