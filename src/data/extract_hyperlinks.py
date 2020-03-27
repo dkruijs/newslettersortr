@@ -2,6 +2,7 @@ import email
 import logging
 import base64
 import re
+from requests import get
 from pathlib import Path
 from src.data.get_gmails import connector_gmail
 
@@ -71,7 +72,7 @@ class InboxDelta:
             msg_word_list = msg_string.split(" ")
             hyperlink_list = [word for word in msg_word_list if 'http' in word]
             for link in hyperlink_list:
-                if re.match('.*\(https://', link):
+                if re.match('.*\(http.*://', link):
                     link = link.split(sep='(')[1]
                     link = link.rsplit(sep=')')[0]
                 parsed_list.append(link)
@@ -80,9 +81,17 @@ class InboxDelta:
             if (link not in checklist) and \
                 ('accounts.google.com' not in link) and \
                 ('subscr' not in link) and \
-                ('aiohttp' not in link): # TODO: Into config for rules related to the various newsletter cofigurations
-                msg_hyperlink_store.append(link)
-                checklist.append(link)
+                ('aiohttp' not in link) and \
+                ('http' in link) and \
+                ('://' in link): # TODO: Into config for rules related to the various newsletter configurations
+                try:
+                    code = get(link).status_code
+                except:
+                    code = 201
+                if code == 200:
+                    msg_hyperlink_store.append(link) # TODO: Consider adding a header based check for valid url using requests (but perhaps not given higher amount of website calls)
+                    checklist.append(link)
+        print("Hyperlinks extracted")
         return msg_hyperlink_store
 
 

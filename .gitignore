@@ -92,4 +92,4 @@ target/
 .mypy_cache/
 
 # exclude venv
-/venv/
+venv/

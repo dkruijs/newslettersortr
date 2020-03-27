@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 import click
+
 import logging
 import requests
-import re
+from os.path import exists
+from bs4 import BeautifulSoup
 from pathlib import Path
 # from dotenv import find_dotenv, load_dotenv
-import pickle
 import os.path
 from src.data.get_gmails import connector_gmail
 from src.data.extract_hyperlinks import InboxDelta
+from joblib import dump, load
+from string import punctuation
+from re import sub
 
 
 class LinkParser:
@@ -29,20 +33,37 @@ class LinkParser:
     def parse_text(self, corpus):
         for link, text_tpl in corpus.items():
             if 'html' in text_tpl[0]:
-                txt = text_tpl[1]
-                txt = re.sub('<.*>', '', txt)
-                txt = re.sub('\n', ' ', txt)
-                print(txt)
-                tmp_tpl = (text_tpl[0], txt)
-                corpus[link] = tmp_tpl
+                tmp_soup = BeautifulSoup(text_tpl[1], "html5lib")
+                tmp_output = ''
+                counter = 0
+                for line in tmp_soup.prettify().split("\n"):
+                    #if len(line) > 200: # TODO: Check is this setting is appropriate, make data-driven
+                    punctset = [f for f in line if f in punctuation]
+                    punctuation_counts = len(punctset)
+                    if punctuation_counts / (len(line)+.0000000000000000001) < .1: # TODO: Check if this setting is appropriate, make data-driven
+                        tmp_output = tmp_output + line
+                    counter +=1
+                if counter == 0:
+                    print(link)
+                    print('\n\n')
+                    print(tmp_soup)
+                    print('\n\n')
+                    print("Nothing mined... :(")
+                    print('\n\n\n\n\n\n')
+                corpus[link] = tmp_output
         return corpus
 
 
 def main():
-    mails = connector_gmail()
-    messages = InboxDelta(mails.retrieved_delta)
-    parser = LinkParser(messages.hyperlinks)
+    if not exists ("./parser.jbl"):
+        mails = connector_gmail()
+        messages = InboxDelta(mails.retrieved_delta)
+        parser = LinkParser(messages.hyperlinks)
+        dump(parser, "parser.jbl")
+    else:
+        parser = load("./parser.jbl")
     crp = parser.parse_text(parser.corpus)
+
     for key, val in crp.items():
         print(key)
         print('\n')
