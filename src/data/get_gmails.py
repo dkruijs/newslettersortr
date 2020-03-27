@@ -16,11 +16,11 @@ from google.cloud import storage
 # from oauth2client.service_account import ServiceAccountCredentials
 
 # TODO: parameterize using ENV?  
-# If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 TOKEN_FILE = '../../token.pickle'
 CREDENTIALS_FILE = '../../credentials.json'
 STORAGE_BUCKET = 'newslettersortr'
+# If modifying these scopes, delete the file token.pickle.
+SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 class GMailGetter:  
     def __init__(self, credentials=None):
@@ -96,6 +96,7 @@ class GMailGetter:
         """
         service = self.service
         msg_labels = {'removeLabelIds': ['UNREAD'], 'addLabelIds': []}
+
         processed_messages = []
         for thread in messages:
             try:
@@ -134,23 +135,23 @@ class GMailGetter:
             print(f"Persisting to local storage at: {local_path}")
             file_names = []
             for message in messages:
+
                 # TODO: msg['payload']['headers'][ITEREER if name=Received]['value'] om de afzender op te nemen in filename
                 msg = service.users().messages().get(userId='me', id=message['id']).execute()
                 out_file = os.path.join(local_path, "_".join([msg['internalDate'], msg['id']])) + '.json'
+
                 with open(out_file, "w") as file:
                     json.dump(msg, file)
                     file_names.append(file.name)
+
             return file_names
 
         else:
             print(f"Persisting to GCP Storage at {bucket_name}/{bucket_path}")
 
-            # Explicitly use service account credentials by specifying the private key
-            # file.
+            # Explicitly use service account credentials by specifying the private key file.
             storage_client = storage.Client.from_service_account_json(
                 credentials_file) 
-
-            # print('buckets:', list(storage_client.list_buckets()))
 
             bucket = storage_client.get_bucket(bucket_name) 
 
@@ -159,10 +160,8 @@ class GMailGetter:
                 out_file = os.path.join(bucket_path, "_".join([msg['internalDate'], msg['id']])) + '.json'
                 blob = bucket.blob(out_file)
                 print('blob:', blob)
-                # blob.upload_from_filename(path_to_file)
                 blob.upload_from_string(str(msg))
 
-            #returns a public url
             return blob.public_url
         
 
