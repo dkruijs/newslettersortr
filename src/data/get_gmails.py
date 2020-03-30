@@ -33,7 +33,7 @@ class GMailGetter:
         on subsequent runs. Function requires a `credentials.json` file from a Google API export 
         (https://developers.google.com/gmail/api/quickstart/python).
 
-        Parameters:
+        Args:
             credentials (credentials object) -- optional
 
         Returns:
@@ -88,7 +88,7 @@ class GMailGetter:
         Marks each in a collection of messages (actually threads) as READ in the 
         connected GMail account.
         
-        Parameters:
+        Args:
             messages: collection of GMail API messages objects.
 
         Returns:
@@ -121,7 +121,7 @@ class GMailGetter:
         Persists a collection of messages to storage as JSON text files, optionally to GCP 
         object storage or to a local path. 
         
-        Parameters:
+        Args:
             messages: collection of GMail API messages objects.
             local_path (optional): a local path to save the files to.
             **gcp_metadata: a dictionary object with required GCP metadata.
