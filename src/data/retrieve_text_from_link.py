@@ -14,9 +14,10 @@ from string import punctuation
 
 
 class LinkParser:
-    def __init__(self, hyperlink_list):
+    def __init__(self, hyperlink_list, run_pipeline=True):
         self.link_list = hyperlink_list
-        self.corpus = self.retrieve_text(hyperlink_list)
+        if run_pipeline:
+            self.corpus = self.retrieve_text(hyperlink_list)
 
     def retrieve_text(self, hyperlinks):
         corpus = {}
