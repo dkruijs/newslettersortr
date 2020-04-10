@@ -3,27 +3,15 @@ import click
 import logging
 import json
 from pathlib import Path
-# from dotenv import find_dotenv, load_dotenv
+from dotenv import find_dotenv, load_dotenv
 import pickle
-import os.path
+import os
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient import errors
+from google.cloud import storage    
 
-from google.cloud import storage
-
-# TODO: parameterize using ENV
-TOKEN_FILE = '../../token.pickle'
-CREDENTIALS_FILE = '../../credentials.json'
-STORAGE_BUCKET = 'newslettersortr'
-
-GCP_CREDENTIALS_FILE = '../../NewsletterSortr-c019f9f5094d.json'
-GCP_BUCKET_NAME = 'newslettersortr'
-GCP_BUCKET_PATH = 'data/raw/'
-
-# If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 class GMailGetter:  
     def __init__(self, credentials=None, run_pipeline=True):
@@ -32,9 +20,9 @@ class GMailGetter:
             self.unread_messages = self.get_unread_messages()
             if self.unread_messages is not None:
                 gcp_metadata = {
-                    'credentials_file': GCP_CREDENTIALS_FILE,
-                    'bucket_name': GCP_BUCKET_NAME,
-                    'bucket_path': GCP_BUCKET_PATH 
+                    'credentials_file': os.environ['GCP_CREDENTIALS_FILE'],
+                    'bucket_name': os.environ['GCP_BUCKET_NAME'],
+                    'bucket_path': os.environ['GCP_BUCKET_PATH'] 
                 }
                 self.saved_to_disk = self.persist_to_storage(self.unread_messages, **gcp_metadata)
                 self.marked_as_read = self.mark_as_read(self.unread_messages)
@@ -60,8 +48,8 @@ class GMailGetter:
             return service    
         else: 
             # Reload previously stored credentials from pickle if possible;
-            if os.path.exists(TOKEN_FILE):
-                with open(TOKEN_FILE, 'rb') as token:
+            if os.path.exists(os.environ['TOKEN_FILE']):
+                with open(os.environ['TOKEN_FILE'], 'rb') as token:
                     credentials = pickle.load(token)
 
             # If there are no (valid) credentials available, let the user log in manually (using a web page).
@@ -70,10 +58,10 @@ class GMailGetter:
                     credentials.refresh(Request())
                 else:
                     flow = InstalledAppFlow.from_client_secrets_file(
-                        CREDENTIALS_FILE, SCOPES) # TODO: modularize
+                        os.environ['CREDENTIALS_FILE'], os.environ['SCOPES'].split(';')) # TODO: modularize
                     credentials = flow.run_local_server(port=0)
                 # Save the credentials for the next run
-                with open(TOKEN_FILE, 'wb') as token:
+                with open(os.environ['TOKEN_FILE'], 'wb') as token:
                     pickle.dump(credentials, token)
 
             service = build('gmail', 'v1', credentials=credentials)
@@ -119,7 +107,7 @@ class GMailGetter:
                 thread_id = thread['id']
                 label_ids = thread['messages'][0]['labelIds']
 
-                # TODO: convert to proper logging
+                # TODO: convert print statments to proper logging
                 print(f'Thread ID: {thread_id} - With Label IDs {label_ids}')
                 processed_messages.append(thread)
 
@@ -133,6 +121,8 @@ class GMailGetter:
         """
         Persists a collection of messages to storage as JSON text files, optionally to GCP 
         object storage or to a local path. 
+        Pass the arguments `credentials_file`, `bucket_name` and `bucket_path` to store 
+        to GCP; do not pass them to store to a local path.
         
         Args:
             messages: collection of GMail API messages objects.
@@ -183,6 +173,15 @@ def main():
     Main function mainly demonstrates the 'normal flow', can be called to simply
     retrieve new data.
     """
+    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
+
+    # not used in this stub but often useful for finding various files
+    # project_dir = Path(__file__).resolve().parents[2]
+
+    # Load ENV configuration
+    load_dotenv(find_dotenv())
+    
     # We instantiate a GMailGetter without credentials, instead using 
     # the manual authentication and credentials caching logic to demonstrate 
     # the steps.
@@ -213,6 +212,6 @@ if __name__ == '__main__':
 
     # find .env automagically by walking up directories until it's found, then
     # load up the .env entries as environment variables
-    # load_dotenv(find_dotenv())
+    load_dotenv(find_dotenv())
 
     main()
