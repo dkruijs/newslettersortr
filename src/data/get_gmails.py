@@ -12,18 +12,32 @@ from google.auth.transport.requests import Request
 from googleapiclient import errors
 
 from google.cloud import storage
-# from oauth2client.service_account import ServiceAccountCredentials
 
-# TODO: parameterize using ENV?  
+# TODO: parameterize using ENV
 TOKEN_FILE = '../../token.pickle'
 CREDENTIALS_FILE = '../../credentials.json'
 STORAGE_BUCKET = 'newslettersortr'
+
+GCP_CREDENTIALS_FILE = '../../NewsletterSortr-c019f9f5094d.json'
+GCP_BUCKET_NAME = 'newslettersortr'
+GCP_BUCKET_PATH = 'data/raw/'
+
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 class GMailGetter:  
-    def __init__(self, credentials=None):
+    def __init__(self, credentials=None, run_pipeline=True):
         self.service = self.initialize_login(credentials)
+        if run_pipeline:
+            self.unread_messages = self.get_unread_messages()
+            if self.unread_messages is not None:
+                gcp_metadata = {
+                    'credentials_file': GCP_CREDENTIALS_FILE,
+                    'bucket_name': GCP_BUCKET_NAME,
+                    'bucket_path': GCP_BUCKET_PATH 
+                }
+                self.saved_to_disk = self.persist_to_storage(self.unread_messages, **gcp_metadata)
+                self.marked_as_read = self.mark_as_read(self.unread_messages)
 
     def initialize_login(self, credentials):
         """
@@ -170,8 +184,9 @@ def main():
     retrieve new data.
     """
     # We instantiate a GMailGetter without credentials, instead using 
-    # the manual authentication and credentials caching logic.
-    mail_getter = GMailGetter()
+    # the manual authentication and credentials caching logic to demonstrate 
+    # the steps.
+    mail_getter = GMailGetter(run_pipeline=False)
 
     unread_messages = mail_getter.get_unread_messages()
     print('Found unread messages:', unread_messages, '\n')
