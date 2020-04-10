@@ -87,7 +87,7 @@ class GMailGetter:
             A collection of GMail messages (actually threads).
         """
         service = self.service
-        results = service.users().messages().list(userId='me',labelIds = ['INBOX', 'UNREAD']).execute()
+        results = service.users().messages().list(userId='me', labelIds=['INBOX', 'UNREAD']).execute()
         messages = results.get('messages', [])
 
         if not messages:
@@ -150,7 +150,7 @@ class GMailGetter:
             for message in messages:
 
                 # TODO: msg['payload']['headers'][ITEREER if name=Received]['value'] om de afzender op te nemen in filename
-                msg = service.users().messages().get(userId='me', id=message['id']).execute()
+                msg = service.users().messages().get(userId='me', id=message['id'], format='raw').execute()
                 out_file = os.path.join(local_path, "_".join([msg['internalDate'], msg['id']])) + '.json'
 
                 with open(out_file, "w") as file:
@@ -158,7 +158,7 @@ class GMailGetter:
                     file_names.append(file.name)
 
             return file_names
-
+# TODO: Hier de results per msg in een datastructuur proppen en die teruggeven
         else:
             print(f"Persisting to GCP Storage at {bucket_name}/{bucket_path}")
 

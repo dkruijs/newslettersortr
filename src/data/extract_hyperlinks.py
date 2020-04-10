@@ -31,7 +31,7 @@ class InboxDelta:
         :return extract_store: A dict of email message strings with structure {msg_id: parsed string}.
         """
         extract_store = {}
-        for msg_id, content in raw_msgs.items():
+        for msg_id, content in raw_msgs.items(): # TODO: Handle NoneType when nothing retrieved
             msg_str = base64.urlsafe_b64decode(content['raw'].encode('UTF8'))
             b = email.message_from_bytes(msg_str, policy=email.policy.SMTPUTF8)
             body = ""

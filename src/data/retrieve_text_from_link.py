@@ -56,7 +56,7 @@ class LinkParser:
 def main():
     if not exists ("./parser.jbl"):
         mails = GMailGetter()
-        messages = InboxDelta(mails.retrieved_delta)
+        messages = InboxDelta(mails.unread_messages)
         parser = LinkParser(messages.hyperlinks)
         dump(parser, "parser.jbl")
     else:
