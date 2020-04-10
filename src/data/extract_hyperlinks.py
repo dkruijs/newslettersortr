@@ -6,7 +6,7 @@ from requests import get
 from pathlib import Path
 
 # see https://stackoverflow.com/questions/39373243/what-is-the-encoding-of-the-body-of-gmail-message-how-to-decode-it
-# TODO: Make sure solution handles mime and non-mime
+# TODO: Make sure solution handless mime and non-mime
 
 
 class InboxDelta:
@@ -31,7 +31,7 @@ class InboxDelta:
         :return extract_store: A dict of email message strings with structure {msg_id: parsed string}.
         """
         extract_store = {}
-        for msg_id, content in raw_msgs.items(): # TODO: Handle NoneType when nothing retrieved
+        for msg_id, content in raw_msgs.items(): # TODO: Make sure this handles NoneType for msgs
             msg_str = base64.urlsafe_b64decode(content['raw'].encode('UTF8'))
             b = email.message_from_bytes(msg_str, policy=email.policy.SMTPUTF8)
             body = ""

@@ -24,8 +24,10 @@ class GMailGetter:
                     'bucket_name': os.environ['GCP_BUCKET_NAME'],
                     'bucket_path': os.environ['GCP_BUCKET_PATH'] 
                 }
-                self.saved_to_disk = self.persist_to_storage(self.unread_messages, **gcp_metadata)
+                self.saved_to_disk, self.retrieved_delta = self.persist_to_storage(self.unread_messages, **gcp_metadata)
+                print('Persisted to storage:', self.saved_to_disk, '\n')
                 self.marked_as_read = self.mark_as_read(self.unread_messages)
+                print('Marked as read:', self.marked_as_read, '\n')
 
     def initialize_login(self, credentials):
         """
@@ -82,6 +84,7 @@ class GMailGetter:
             print('No unread threads found.')
             return None
         else:
+            print('Found unread messages:', messages, '\n')
             return messages
 
     def mark_as_read(self, messages):
@@ -116,7 +119,7 @@ class GMailGetter:
 
         return processed_messages
 
-    def persist_to_storage(self, messages, local_path='../../data/raw', 
+    def persist_to_storage(self, messages, local_path='../../data/raw',
                             credentials_file=None, bucket_name=None, bucket_path=None):
         """
         Persists a collection of messages to storage as JSON text files, optionally to GCP 
@@ -134,6 +137,7 @@ class GMailGetter:
         """
         service = self.service
 
+        message_store = {}
         if credentials_file == bucket_name == bucket_path == None:
             print(f"Persisting to local storage at: {local_path}")
             file_names = []
@@ -141,14 +145,15 @@ class GMailGetter:
 
                 # TODO: msg['payload']['headers'][ITEREER if name=Received]['value'] om de afzender op te nemen in filename
                 msg = service.users().messages().get(userId='me', id=message['id'], format='raw').execute()
+                message_store[message['id']] = message
+
                 out_file = os.path.join(local_path, "_".join([msg['internalDate'], msg['id']])) + '.json'
 
                 with open(out_file, "w") as file:
                     json.dump(msg, file)
                     file_names.append(file.name)
 
-            return file_names
-# TODO: Hier de results per msg in een datastructuur proppen en die teruggeven
+            return file_names, message_store
         else:
             print(f"Persisting to GCP Storage at {bucket_name}/{bucket_path}")
 
@@ -160,48 +165,17 @@ class GMailGetter:
 
             for message in messages:
                 msg = service.users().messages().get(userId='me', id=message['id']).execute()
+                message_store[message['id']] = message
                 out_file = os.path.join(bucket_path, "_".join([msg['internalDate'], msg['id']])) + '.json'
                 blob = bucket.blob(out_file)
                 print('blob:', blob)
                 blob.upload_from_string(str(msg))
 
-            return blob.public_url
+            return blob.public_url, message_store
         
 
 def main():
-    """
-    Main function mainly demonstrates the 'normal flow', can be called to simply
-    retrieve new data.
-    """
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-    # not used in this stub but often useful for finding various files
-    # project_dir = Path(__file__).resolve().parents[2]
-
-    # Load ENV configuration
-    load_dotenv(find_dotenv())
-    
-    # We instantiate a GMailGetter without credentials, instead using 
-    # the manual authentication and credentials caching logic to demonstrate 
-    # the steps.
-    mail_getter = GMailGetter(run_pipeline=False)
-
-    unread_messages = mail_getter.get_unread_messages()
-    print('Found unread messages:', unread_messages, '\n')
-
-    if unread_messages is not None:
-        gcp_metadata = {
-            'credentials_file': '../../NewsletterSortr-c019f9f5094d.json',
-            'bucket_name': 'newslettersortr',
-            'bucket_path': 'data/raw/'
-        }
-        saved_to_disk = mail_getter.persist_to_storage(unread_messages, **gcp_metadata)
-        print('Persisted to storage:', saved_to_disk, '\n')
-
-        marked_as_read = mail_getter.mark_as_read(unread_messages)
-        print('Marked as read:', marked_as_read, '\n')
-
+    pass
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
