@@ -107,7 +107,7 @@ class GMailGetter:
                 thread_id = thread['id']
                 label_ids = thread['messages'][0]['labelIds']
 
-                # TODO: convert to proper logging
+                # TODO: convert print statments to proper logging
                 print(f'Thread ID: {thread_id} - With Label IDs {label_ids}')
                 processed_messages.append(thread)
 

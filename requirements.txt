@@ -14,5 +14,6 @@ googleapiclient
 google-cloud-storage
 requests
 beautifulsoup4
+html5lib
 joblib
 
