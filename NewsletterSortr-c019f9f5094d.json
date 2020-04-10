@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "thinking-field-271013",
+  "private_key_id": "c019f9f5094d510af9639457920b6c852dc585a1",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCqLE6xZ3za3/3x\nCtUkqvXfJJFoUWT+wfyG5LpXnN8q3P84gXUX6lj1g/PqXRPFrnpkFN9aWOPiTDCN\nc4pfgBq5OpaO9eSU22jqJPwL+p7/VhnvY4XGqSHxI/csQ/Clur71u7lgFwz/CHKP\nEdcMSgQPIOjD+AQ+Kd4n0PW9rYeKgEQn+oaRs8pk60/s17BYUNLLbq+ZZOAJlHSC\n8pekDfbo46yQLuamN1k2y0Hmdw5IOvm4NJafqETASvm7qlvjuxh+XOBOoY4YDQGg\n+ANNPjo1CPx0x2+UVB2yV0n0j20ySGxncYux6y2lvzLSEBjkde+/im2WiIHy5LeP\nez0pOCahAgMBAAECggEATFVaqUZgIbgnK3gt+ug7KTC4jwAv2vz+Py4bjlBeZNZE\nH78mXKdw5xSdFaxRwbNN0FXyiI7mDe0aPGEvGT6X/i2TOqZ/Neyjx5/2dZMiviuL\nr6/HYsEcahQ1fCQvrs+xd/4QndNJL59E7/tTKP6MipK7Bqjakl3qepbHnKFZ8txx\nLa9Ej9sRJ7DEv4w33O62R4ZJ83U/oLhpjUzQ5LTAyIo6UcBiOjflIbqTm99lqRiq\niYOOzcSduJ4ry1QmZVWcOaxzxVnkie3Zy7W5Hc+UpmM3lZ6WaQIfDgjqxePkXFIh\ncEadFRTowoy9fG+JUduP72E5oY0oiwSsJDjOtka8twKBgQDnzxCYICPIaTihSgQP\nOZ60k4A78j9CNimaHJQK+z7CQprTU2Y6wM5HYE81+3eyxfhGyb0on4d59JtMT/Y5\nR3iNdXVOzwtWkk8bkph+SdQzrNbYNrfyuyY6U8o++qZTaXI4mKcbYLZjHtKLtfww\nDc/vNxyYDHt4W5EpK/7RIpAaTwKBgQC77pmUGD7Z8wIBg4iyJcQlhcqEerqZs+kj\nLVBvo5nBMp4TwuAs1oFXPuK45yTgZXkAlMeagWFu88wY9EeRXJkxmmv6NTDlzTll\nj7mTwqqzq1AcdW0G3TlUiSOFzHX9J4V1HI8h80DWAlrTFa1R8F6EoOOYaNOXxMyB\n954h0FSkDwKBgF4ASepmnhwXDy/Yo+zIoOL5LXchtSVUcWpdTGtnlvuPptkraLlK\nllu7YmOxpciJHzUVee+PQZDi8Fbx1hdENE6o4vkiXKaujgXQXKZZqgOKg1UKW23D\nFq1wbQM9AVWx3O+2d41SmqN3TEn7cljKQRfwcVf3N9qGx0a64IpOScFhAoGBAJ9X\no9HkaM4E8+tyqiFaUh/6e4auRK7z0zWnQy8VCNW9ZDifH9IEoi/mOvfJzAOTJfBv\nNXp0PreDcMarwE6os59SLkE8flQqGINbRF7bTD8AfvFSQvnx8p0RlhPpExVtQAPX\nDikcBhoubvHQzF7QLmPHwpHEN7vT+g4sdGB5MnrTAoGBAJiCFM3P70mMZIFd6pHO\nRF6U3S3zf2xLPiB1IXhEncpfncABVmHQaUyPn+ivWvRStExZOeQ3abuAcswWEQDX\nNysCPY1sStJvE7LL5OWnxbnUXmlgKgUGPdRT3FStKjDddvaDRDu9k4hMD9oNRbyd\nW2wJEt4AFYa4MDREcYYPfSeI\n-----END PRIVATE KEY-----\n",
+  "client_email": "newslettersortr-service-accoun@thinking-field-271013.iam.gserviceaccount.com",
+  "client_id": "112508485643266930924",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/newslettersortr-service-accoun%40thinking-field-271013.iam.gserviceaccount.com"
+}

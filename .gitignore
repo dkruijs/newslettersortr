@@ -92,3 +92,6 @@ target/
 
 # Mypy cache
 .mypy_cache/
+
+# exclude venv
+venv/
