@@ -121,6 +121,8 @@ class GMailGetter:
         """
         Persists a collection of messages to storage as JSON text files, optionally to GCP 
         object storage or to a local path. 
+        Pass the arguments `credentials_file`, `bucket_name` and `bucket_path` to store 
+        to GCP; do not pass them to store to a local path.
         
         Args:
             messages: collection of GMail API messages objects.
