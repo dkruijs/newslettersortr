@@ -5,8 +5,10 @@ __pycache__/
 # C extensions
 *.so
 
-# Google API credentials
-# credentials.json
+# GMail API/GCP credentials
+**/credentials.json
+**/token.pickle
+**/NewsletterSortr-c019f9f5094d.json
 
 # Distribution / packaging
 .Python
