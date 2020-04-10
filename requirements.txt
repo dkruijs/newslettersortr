@@ -12,3 +12,7 @@ python-dotenv>=0.5.1
 google_auth_oauthlib
 googleapiclient
 google-cloud-storage
+requests
+beautifulsoup4
+joblib
+
