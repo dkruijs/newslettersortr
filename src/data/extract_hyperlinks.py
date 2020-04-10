@@ -4,10 +4,9 @@ import base64
 import re
 from requests import get
 from pathlib import Path
-from src.data.get_gmails import connector_gmail
 
 # see https://stackoverflow.com/questions/39373243/what-is-the-encoding-of-the-body-of-gmail-message-how-to-decode-it
-# TODO: Make sure solution haldes mime and non-mime
+# TODO: Make sure solution handles mime and non-mime
 
 
 class InboxDelta:
