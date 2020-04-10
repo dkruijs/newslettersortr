@@ -7,12 +7,10 @@ from os.path import exists
 from bs4 import BeautifulSoup
 from pathlib import Path
 # from dotenv import find_dotenv, load_dotenv
-import os.path
-from src.data.get_gmails import connector_gmail
+from src.data.get_gmails import GMailGetter
 from src.data.extract_hyperlinks import InboxDelta
 from joblib import dump, load
 from string import punctuation
-from re import sub
 
 
 class LinkParser:
@@ -56,7 +54,7 @@ class LinkParser:
 
 def main():
     if not exists ("./parser.jbl"):
-        mails = connector_gmail()
+        mails = GMailGetter()
         messages = InboxDelta(mails.retrieved_delta)
         parser = LinkParser(messages.hyperlinks)
         dump(parser, "parser.jbl")
