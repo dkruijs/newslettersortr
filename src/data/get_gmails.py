@@ -11,7 +11,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient import errors
 from google.cloud import storage    
-
+load_dotenv(find_dotenv())
 
 class GMailGetter:  
     def __init__(self, credentials=None, run_pipeline=True):
@@ -145,7 +145,7 @@ class GMailGetter:
 
                 # TODO: msg['payload']['headers'][ITEREER if name=Received]['value'] om de afzender op te nemen in filename
                 msg = service.users().messages().get(userId='me', id=message['id'], format='raw').execute()
-                message_store[message['id']] = message
+                message_store[message['id']] = msg
 
                 out_file = os.path.join(local_path, "_".join([msg['internalDate'], msg['id']])) + '.json'
 
@@ -164,8 +164,8 @@ class GMailGetter:
             bucket = storage_client.get_bucket(bucket_name) 
 
             for message in messages:
-                msg = service.users().messages().get(userId='me', id=message['id']).execute()
-                message_store[message['id']] = message
+                msg = service.users().messages().get(userId='me', id=message['id'], format='raw').execute()
+                message_store[message['id']] = msg
                 out_file = os.path.join(bucket_path, "_".join([msg['internalDate'], msg['id']])) + '.json'
                 blob = bucket.blob(out_file)
                 print('blob:', blob)
