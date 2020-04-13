@@ -22,6 +22,10 @@ from src.data.retrieve_text_from_link import LinkParser
 # we lang niet gedraaid hebben is batch processing mogelijk nodig.
 
 # TODO moeten we hier uiteindelijk ook rekening houden met Nederlandstalige tekst?
+# TODO: Catch NoneType exception when all input consumed
+# TODO: Put chunked values into result dict which maintains corpus structure
+# TODO: Second pipeline for tf / idf >> topic detection?
+
 
 # Using a coroutine decorator on the pipeline components, defined as such:
 # (RE: https://nlpforhackers.io/building-a-nlp-pipeline-in-nltk/)
@@ -37,16 +41,17 @@ class TextProcessor:
     def __init__(self, corpus, run_pipeline=True): 
         # keys: URL, values: text
         self.corpus = corpus
-        self.processing_pipeling(corpus) 
+        self.processed_corpus = self.processing_pipeline(corpus)
         # TODO hier iets logischers doen; pipeline is ingericht op meerdere teksten, maar willen we niet één voor één?
+        # Ik mis de context hier, maar neem aan dat we het hebben over batch vs 'streaming'?
     
     @coroutine
     def source(self, texts, targets):
-        for text in texts:
+        for key, text in texts.items():
             for t in targets:
                 t.send(text)
 
-    def processing_pipeling(self, texts):
+    def processing_pipeline(self, texts):
         self.source(texts, targets=[
             self.sent_tokenize_pipeline(targets=[
                 self.printer(),  # print the raw sentences
@@ -54,12 +59,13 @@ class TextProcessor:
                     self.printer(),  # print the tokenized sentences
                     self.pos_tag_pipeline(targets=[
                         self.printer(),  # print the tagged sentences
-                        self.named_entity_chunk_pipeline(targets=[self.printer()]),
+                        self.named_entity_chunk_pipeline(targets=[
+                            self.printer()]), # print the chunked sentences
                     ])
                 ])
             ])
         ])
-    
+
     @coroutine
     def sent_tokenize_pipeline(self, targets):
         '''Pipeline for tokenizing sentences.
@@ -80,7 +86,7 @@ class TextProcessor:
             words = nltk.word_tokenize(sentence)
             for target in targets:
                 target.send(words)
-    
+
     @coroutine
     def pos_tag_pipeline(self, targets):
         '''Pipeline for tagging Parts Of Speech.
@@ -109,7 +115,7 @@ class TextProcessor:
             line = (yield)
             print(line)
     
-    
+
 
 
 

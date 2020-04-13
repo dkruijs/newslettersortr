@@ -62,6 +62,7 @@ def main():
     else:
         parser = load("./parser.jbl")
     crp = parser.parse_text(parser.corpus)
+    dump(crp, "../features/corpus_tmp.jbl")
 
     for key, val in crp.items():
         print(key)
