@@ -3,13 +3,9 @@ import click
 
 import logging
 import requests
-from os.path import exists
 from bs4 import BeautifulSoup
 from pathlib import Path
 # from dotenv import find_dotenv, load_dotenv
-from src.data.get_gmails import GMailGetter
-from src.data.extract_hyperlinks import InboxDelta
-from joblib import dump, load
 from string import punctuation
 
 
@@ -54,22 +50,7 @@ class LinkParser:
 
 
 def main():
-    if not exists ("./parser.jbl"):
-        mails = GMailGetter()
-        messages = InboxDelta(mails.retrieved_delta)
-        parser = LinkParser(messages.hyperlinks)
-        dump(parser, "parser.jbl")
-    else:
-        parser = load("./parser.jbl")
-    crp = parser.parse_text(parser.corpus)
-    dump(crp, "../features/corpus_tmp.jbl")
-
-    for key, val in crp.items():
-        print(key)
-        print('\n')
-        print(val)
-        print('\n\n')
-    # TODO: Parse message content into usable text :)
+    pass
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

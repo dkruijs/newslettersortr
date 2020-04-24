@@ -3,11 +3,12 @@ import click
 import logging
 import re
 import nltk
-from joblib import dump, load
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 from nltk.corpus import stopwords
-from gensim import models, corpora
+from datetime import date
+from os.path import exists
+
 
 # TODO: one-time NLTK resource installs. Should this be in setup.py? 
 # RE: https://www.nltk.org/data.html
@@ -48,16 +49,21 @@ class TextProcessor:
     def __init__(self, corpus, run_pipeline=True): 
         # keys: URL, values: text
         self.corpus = corpus
-        self.stopwords = stopwords.words('english')
+        self.stopwords = stopwords.words('english') + ["div", "class=", "amp", "span", "jsname=", "content=", "params",
+                                                       "var", "new", "data", "meta", "property="] # TODO: Custom stop words in config
         self.processed_corpus = self.processing_pipeline(corpus)
         # TODO hier iets logischers doen; pipeline is ingericht op meerdere teksten, maar willen we niet één voor één?
         # Ik mis de context hier, maar neem aan dat we het hebben over batch vs 'streaming'?
-    
+
     @coroutine
     def source(self, texts, targets):
-        for t in targets:
-            for key, value in texts.items():
-                t.send((key, value))
+        try:
+            while True:
+                for t in targets:
+                    for key, value in texts.items():
+                        t.send((key, value))
+        except:
+            print("Send from source completed.")
 
     def processing_pipeline(self, texts):
         self.source(texts, targets=[
@@ -67,7 +73,7 @@ class TextProcessor:
                     self.printer(),  # print the tokenized sentences
                     self.remove_stop_word_pipeline(targets=[
                         self.printer(),  # print the filtered tokens
-                        self.train_model()
+                        self.write_to_file()
                     ])
                 ])
             ])
@@ -77,70 +83,81 @@ class TextProcessor:
     def sent_tokenize_pipeline(self, targets):
         '''Pipeline for tokenizing sentences.
         '''
-        while True:
-            tpl_text = (yield)
-            tpl_text[1] = nltk.sent_tokenize(tpl_text[1])
-            for target in targets:
-                target.send(tpl_text) # What is sentences here?
+        try:
+            while True:
+                tpl_text = (yield)
+                txt = tpl_text[1]
+                output = nltk.sent_tokenize(txt)
+                for target in targets:
+                    target.send((tpl_text[0], output))
+        except:
+            print("Sentence tokenizing completed.")
 
     @coroutine
     def word_tokenize_pipeline(self, targets):
         '''Pipeline for tokenizing words.
         '''
-        while True:
-            tpl_text = (yield)
-            tokenized_sentences = []
-            for sentence in tpl_text[1]:
-                words = nltk.word_tokenize(sentence)
-                tokenized_sentences.append(words)
-            tpl_text[1] = tokenized_sentences
-            for target in targets:
-                target.send(tpl_text)
+        try:
+            while True:
+                tpl_text = (yield)
+                tokenized_sentences = []
+                for sentence in tpl_text[1]:
+                    sentence = sentence.lower()
+                    words = nltk.word_tokenize(sentence)
+                    tokenized_sentences.append(words)
+                for target in targets:
+                    target.send((tpl_text[0], tokenized_sentences))
+        except:
+            print("Tokenizing completed.")
 
     @coroutine
     def printer(self):
-        while True:
-            line = (yield)
-            print(line)
+        try:
+            while True:
+                line = (yield)
+                print(line)
+        except:
+            print("Printing completed.")
 
     @coroutine
     def remove_stop_word_pipeline(self, targets): # TODO: Allow addition of stop words through config.
         '''Pipeline for removing stop words.
         '''
-        while True:
-            tpl_text = (yield)
-            resentence = []
-            for sentence in tpl_text[1]:
-                filtered_tokens = [t for t in sentence if t not in self.stopwords and re.match('[a-zA-Z\-][a-zA-Z\-]{2,}', t)]
-                resentence = resentence + filtered_tokens
-            tpl_text[1] = resentence
-            for target in targets:
-                target.send(tpl_text)
+        try:
+            while True:
+                tpl_text = (yield)
+                print(tpl_text)
+                resentence = []
+                for sentence in tpl_text[1]:
+                    filtered_tokens = [t for t in sentence if
+                                       t not in self.stopwords and re.match('[a-zA-Z\-][a-zA-Z\-]{2,}', t)]
+                    resentence = resentence + filtered_tokens
+                for target in targets:
+                    target.send((tpl_text[0], resentence))
+        except:
+            print("Remove stop words completed.")
 
     @coroutine
-    def write_to_file(self, targets):
-        tpl_text = (yield)
-        fpath = "" # TODO: Put in GCloud storage and local here; identify and track batches; create proper identifier
-        fhand = open(fpath, 'a')
-        fhand.write('\n')
-        for line in tpl_text:
-            fhand.write(line)
-        fhand.close()
-
-## Resume here
-
-    @coroutine # TODO: Put into code for running after pipeline, Load data locally or from GCloud storage.
-    def train_model(self):
-        texts = (yield)
-        dictionary = corpora.Dictionary(texts)
-        corpus = [texts.doc2bow(text) for text in dictionary]
-        lda_model = models.LdaModel(corpus=corpus, num_topics=10, id2word=dictionary)
-
-        print("LDA Model:")
-
-        for idx in range(10):
-            # Print the first 10 most representative topics
-            print("Topic #%s:" % idx, lda_model.print_topic(idx, 10))
+    def write_to_file(self):
+        try:
+            while True: # TODO: Coroutines knallen er na een aantal posts uit - waarom?
+                tpl_text = (yield)
+                fpath = "./processed_batch_" + str(date.today()) + ".txt"
+                # TODO: Put in GCloud storage and local here; identify and track batches;
+                # TODO file handling to avoid continuous appending;  create proper identifier
+                resultdict = str(tpl_text[0]) + "\n\nDeze regel gaat heel snel weer weg\n\n" + str(tpl_text[1])
+                if not exists(fpath):
+                    fhand = open(fpath, 'w')
+                    fhand.write(resultdict)
+                    fhand.write("\n\nEvert-Jan en Daan zijn absolute helden\n\n")
+                    fhand.close()
+                else:
+                    fhand = open(fpath, 'a')
+                    fhand.write(resultdict)
+                    fhand.write("\n\nEvert-Jan en Daan zijn absolute helden\n\n")
+                    fhand.close()
+        except:
+            print("Write to file completed.")
 
     # @coroutine
     # def pos_tag_pipeline(self, targets):
@@ -166,14 +183,7 @@ class TextProcessor:
 
 
 def main():
-    logger = logging.getLogger(__name__)
-    logger.info('making final data set from raw data')
-
-    # DEVELOPMENT
-    corpus = load('./corpus_temp.jbl')
-
-    tp = TextProcessor(corpus=corpus)
-
+    pass
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
