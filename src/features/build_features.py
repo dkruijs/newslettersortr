@@ -10,7 +10,7 @@ from datetime import date
 from os.path import exists
 
 
-# TODO: one-time NLTK resource installs. Should this be in setup.py? 
+# TODO: éénmalige NLTK resource installs. Dit zou verplaatst moeten worden naar setup.py oid.
 # RE: https://www.nltk.org/data.html
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
@@ -26,7 +26,7 @@ from src.data.retrieve_text_from_link import LinkParser
 # een lichte docker? we bouwen nu iets dat een stream verzorgt, maar als
 # we lang niet gedraaid hebben is batch processing mogelijk nodig.
 
-# TODO moeten we hier uiteindelijk ook rekening houden met Nederlandstalige tekst?
+# TODO: moeten we hier uiteindelijk ook rekening houden met Nederlandstalige tekst?
 # TODO: Catch NoneType exception when all input consumed
 # TODO: Put chunked values into result dict which maintains corpus structure
 # TODO: Second pipeline for tf / idf >> topic detection?
@@ -34,6 +34,7 @@ from src.data.retrieve_text_from_link import LinkParser
 
 # Using a coroutine decorator on the pipeline components, defined as such:
 # (RE: https://nlpforhackers.io/building-a-nlp-pipeline-in-nltk/)
+# (see also: https://stackabuse.com/coroutines-in-python/)
 def coroutine(func):
     def start(*args, **kwargs):
         cr = func(*args, **kwargs)
@@ -41,7 +42,7 @@ def coroutine(func):
             next(cr)
             return cr
         else:
-            pass # TODO: Hack-y solution for getting None out of last iteration - dig into generator objects and make neater
+            pass # TODO: Hack-y solution for getting None out of last iteration - dig into coroutine objects and make neater
     return start
 
 
@@ -51,9 +52,8 @@ class TextProcessor:
         self.corpus = corpus
         self.stopwords = stopwords.words('english') + ["div", "class=", "amp", "span", "jsname=", "content=", "params",
                                                        "var", "new", "data", "meta", "property="] # TODO: Custom stop words in config
-        self.processed_corpus = self.processing_pipeline(corpus)
-        # TODO hier iets logischers doen; pipeline is ingericht op meerdere teksten, maar willen we niet één voor één?
-        # Ik mis de context hier, maar neem aan dat we het hebben over batch vs 'streaming'?
+        self.processed_corpus = {}
+        self.processing_pipeline(corpus)
 
     @coroutine
     def source(self, texts, targets):
@@ -73,7 +73,7 @@ class TextProcessor:
                     self.printer(),  # print the tokenized sentences
                     self.remove_stop_word_pipeline(targets=[
                         self.printer(),  # print the filtered tokens
-                        self.write_to_file()
+                        self.persist()
                     ])
                 ])
             ])
@@ -138,13 +138,14 @@ class TextProcessor:
             print("Remove stop words completed.")
 
     @coroutine
-    def write_to_file(self):
+    def persist(self, fpath="./processed_batch_" + str(date.today()) + ".txt"):
         try:
             while True: # TODO: Coroutines knallen er na een aantal posts uit - waarom?
                 tpl_text = (yield)
-                fpath = "./processed_batch_" + str(date.today()) + ".txt"
+                # Persist in class attribute
+                self.processed_corpus[tpl_text[0]] = tpl_text[1]
                 # TODO: Put in GCloud storage and local here; identify and track batches;
-                # TODO file handling to avoid continuous appending;  create proper identifier
+                # TODO: file handling to avoid continuous appending;  create proper identifier
                 resultdict = str(tpl_text[0]) + "\n\nDeze regel gaat heel snel weer weg\n\n" + str(tpl_text[1])
                 if not exists(fpath):
                     fhand = open(fpath, 'w')
@@ -158,6 +159,10 @@ class TextProcessor:
                     fhand.close()
         except:
             print("Write to file completed.")
+
+
+    # TODO: willen we onderstaande onderdelen in eer herstellen? Dit lijkt me wel 
+    # logisch in een topic modeling toepassing
 
     # @coroutine
     # def pos_tag_pipeline(self, targets):

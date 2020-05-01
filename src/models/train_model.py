@@ -61,7 +61,7 @@ def main():
     logger.info('making final data set from raw data')
 
     # DEVELOPMENT
-    if not exists ("./parser.jbl"):
+    if not exists("./parser.jbl"):
         mails = GMailGetter()
         messages = InboxDelta(mails.retrieved_delta)
         parser = LinkParser(messages.hyperlinks)
@@ -77,10 +77,12 @@ def main():
     if exists(fpath):
         remove(fpath)
         print("File re-initialized.")
-
+    
     tp = TextProcessor(corpus=crp)
+    dump(tp.processed_corpus, "./processed_corpus.jbl")
+    print('Dumped processed corpus.')
 
-    LDA_fit = LdaFitter()
+    LDA_fit = LdaFitter() #TODO: insert argument processed_corpus=tp.processed_corpus
     print(LDA_fit.model)
 
 if __name__ == '__main__':
