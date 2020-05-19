@@ -5,6 +5,10 @@ __pycache__/
 # C extensions
 *.so
 
+# Editor config files
+**/.idea
+**/.vscode
+
 # GMail API/GCP credentials
 **/credentials.json
 **/token.pickle
