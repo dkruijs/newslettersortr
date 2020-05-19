@@ -12,7 +12,7 @@ __pycache__/
 # GMail API/GCP credentials
 **/credentials.json
 **/token.pickle
-**/NewsletterSortr-c019f9f5094d.json
+**/GCP_credentials.json
 
 # Distribution / packaging
 .Python
